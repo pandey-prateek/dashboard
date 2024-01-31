@@ -4,8 +4,10 @@ import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.nio.charset.StandardCharsets;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -40,7 +42,11 @@ public class RestControllerAll {
     public String parseCSV() throws FileNotFoundException, IOException, ParseException {
         int i=0;
         List<RowRecord> records = new ArrayList<>();
-        try (BufferedReader br = new BufferedReader(new FileReader("dataset.csv"))) {
+        InputStream inputStream = this.getClass()
+        .getClassLoader()
+        .getResourceAsStream("dataset.csv");
+
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8))) {
             String line=br.readLine();
             while ((line = br.readLine()) != null) {
                 String[] values = line.split(",");
@@ -60,12 +66,10 @@ public class RestControllerAll {
         Map<String,Integer> freq=new HashMap();
         for(RowRecord row:records){
             String key=row.getTs().getYear()+"-"+(row.getTs().getMonthValue()<10?("0"+row.getTs().getMonthValue()):row.getTs().getMonthValue());
-            map.put(key,map.getOrDefault(key,0.0)+row.getValue());
+            map.put(key,(Math.round(map.getOrDefault(key,0.0)*100.0))/100.0+(Math.round(row.getValue()*100.0))/100.0);
             freq.put(key,freq.getOrDefault(key,0)+1);
         }
-        for(String key:map.keySet()){
-            map.put(key,map.getOrDefault(key,0.0)/freq.getOrDefault(key,1));
-        }
+        
 
        return map;
     }
